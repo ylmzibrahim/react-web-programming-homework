@@ -1,3 +1,58 @@
 @tailwind base;
+
+@layer base {
+  h1 {
+    @apply text-2xl font-semibold;
+  }
+  h2 {
+    @apply text-xl;
+  }
+  h3 {
+    @apply text-lg;
+  }
+}
+
 @tailwind components;
 @tailwind utilities;
+
+* {
+  @apply m-0 font-mono;
+}
+
+/* Slider css file */
+@import "react-slideshow-image/dist/styles.css";
+/* Blog Slide indicator (dot) styles */
+.indicator {
+  @apply border-0;
+}
+.indicator.active {
+  background: rgba(105, 105, 105, 0.4);
+}
+
+.gradient-background {
+  background: linear-gradient(62deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  animation: gradient 2s ease infinite;
+  background-size: 400% 400%;
+}
+@-webkit-keyframes gradient {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes gradient {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
