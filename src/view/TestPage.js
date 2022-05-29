@@ -32,7 +32,9 @@ const TestPage = () => {
   // Variables about choice type questions
   const [randomChoiceArray, setRandomChoiceArray] = useState([]);
   const [selectedChoice, setSelectedChoice] = useState(null);
-  let choiceArray = [];
+
+  // Variables about calculation type question
+  const [calculationAnswer, setCalculationAnswer] = useState(null);
 
   // Variables about fill type questions
   const [fillSentence, setFillSentence] = useState([]);
@@ -55,6 +57,7 @@ const TestPage = () => {
   useEffect(() => {
     if (tests.length !== 0) {
       if (tests[currentTest].type === "choice") {
+        let choiceArray = [];
         choiceArray.push(tests[currentTest].answer1);
         if (tests[currentTest].answer1 !== "")
           choiceArray.push(tests[currentTest].answer2);
@@ -65,18 +68,22 @@ const TestPage = () => {
         if (tests[currentTest].answer4 !== "")
           choiceArray.push(tests[currentTest].answer5);
         setRandomChoiceArray(shuffle(choiceArray));
+      } else if (tests[currentTest].type === "fill") {
+        setFillSentence(
+          tests[currentTest].question.replace(/\~.*\~/, "..........")
+        );
+        let fillArray = [];
+        fillArray.push(tests[currentTest].answer1);
+        if (tests[currentTest].answer1 !== "")
+          fillArray.push(tests[currentTest].answer2);
+        if (tests[currentTest].answer2 !== "")
+          fillArray.push(tests[currentTest].answer3);
+        if (tests[currentTest].answer3 !== "")
+          fillArray.push(tests[currentTest].answer4);
+        if (tests[currentTest].answer4 !== "")
+          fillArray.push(tests[currentTest].answer5);
+        setRandomFillArray(shuffle(fillArray));
       }
-      // else if (tests[currentTest].type === "fill") {
-      //   setFillSentence(
-      //     tests[currentTest].question.replace(/\+.*\+/, "......")
-      //   );
-      //   let fillAnswerArray = shuffle(tests[currentTest].answer.split(","));
-      //   fillAnswerArray = fillAnswerArray.filter((e) => String(e).trim());
-      //   setRandomFillArray(fillAnswerArray);
-      // }
-      //   else if (tests[currentTest].type === "calculation") {
-
-      //   }
     }
   }, [currentTest, tests]);
 
@@ -126,14 +133,18 @@ const TestPage = () => {
       let tempUserAnswers = [...userAnswers];
       tempUserAnswers[index] = answer;
       setUserAnswers(tempUserAnswers);
+
       setSelectedChoice(null);
+      setCalculationAnswer(null);
+      setSelectedFill(null);
     }
     setCurrentTest(currentTest + 1);
   };
 
-  useEffect(() => {
-    console.log(userAnswers);
-  }, [userAnswers]);
+  const changeSelectedFill = (word, i) => {
+    setSelectedFill(i);
+    setFillSentence(tests[currentTest].question.replace(/\~.*\~/, `"${word}"`));
+  };
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -156,40 +167,89 @@ const TestPage = () => {
                     {currentTest + 1 + ". " + tests[currentTest].title}
                   </div>
                   <div className="flex flex-col items-center justify-center">
-                    <p className="m-5">{tests[currentTest].question}</p>
-
                     {/* Choice Type Question UI */}
                     {tests[currentTest].type === "choice" && (
-                      <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
-                        {randomChoiceArray.map((sentence, i) => (
-                          <div
-                            key={i}
-                            className="font-semibold flex items-center flex-row p-1 cursor-pointer"
-                            onClick={() => changeSelectedChoice(i)}
-                          >
+                      <>
+                        <p className="m-5">{tests[currentTest].question}</p>
+                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                          {randomChoiceArray.map((sentence, i) => (
                             <div
-                              className={
-                                "border rounded-full w-4 h-4 border-slate-500 mr-2 " +
-                                (selectedChoice === i ||
-                                (userAnswers[currentTest] !== null &&
-                                  userAnswers[currentTest] === sentence)
-                                  ? "bg-slate-400/95"
-                                  : "bg-white")
+                              key={i}
+                              className="font-semibold flex items-center flex-row p-1 cursor-pointer"
+                              onClick={() => changeSelectedChoice(i)}
+                            >
+                              <div
+                                className={
+                                  "border rounded-full w-4 h-4 border-slate-500 mr-2 " +
+                                  (selectedChoice === i ||
+                                  (userAnswers[currentTest] !== null &&
+                                    userAnswers[currentTest] === sentence)
+                                    ? "bg-slate-400/95"
+                                    : "bg-white")
+                                }
+                              />
+                              <p>{sentence}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Calculation Type Question UI */}
+                    {tests[currentTest].type === "calculation" && (
+                      <>
+                        <p className="m-5">{tests[currentTest].question}</p>
+                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                          <div className="font-semibold flex items-center flex-row p-1 cursor-pointer">
+                            <input
+                              type="text"
+                              className="w-40 rounded-md border-2 border-slate-300 p-1"
+                              placeholder="Answer here..."
+                              value={calculationAnswer || ""}
+                              onChange={(e) =>
+                                setCalculationAnswer(e.target.value)
                               }
                             />
-                            <p>{sentence}</p>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      </>
                     )}
+
+                    {/* Fill Type Question UI */}
+                    {tests[currentTest].type === "fill" && (
+                      <>
+                        <p className="m-5">{fillSentence}</p>
+                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                          <div className="font-semibold flex items-center flex-wrap justify-center p-1 cursor-pointer">
+                            {randomFillArray.map((word, i) => (
+                              <div
+                                key={i}
+                                className={
+                                  "bg-sky-500/25 rounded-lg px-5 py-1 hover:bg-sky-500 hover:text-white m-1 cursor-pointer " +
+                                  (selectedFill === i ? "hidden" : "")
+                                }
+                                onClick={() => changeSelectedFill(word, i)}
+                              >
+                                {word}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     <button
                       className="mt-5 flex flex-row bg-gradient-to-tr from-green-500 to-teal-500 text-white font-semibold pl-5 pr-3 py-2 rounded-xl hover:from-green-600 hover:to-teal-600 transition-all"
-                      onClick={() =>
-                        ToAnswerQuestion(
-                          randomChoiceArray[selectedChoice],
-                          currentTest
-                        )
-                      }
+                      onClick={() => {
+                        tests[currentTest].type === "choice"
+                          ? ToAnswerQuestion(
+                              randomChoiceArray[selectedChoice],
+                              currentTest
+                            )
+                          : tests[currentTest].type === "calculation"
+                          ? ToAnswerQuestion(calculationAnswer, currentTest)
+                          : ToAnswerQuestion(randomFillArray[selectedFill], currentTest);
+                      }}
                     >
                       {currentTest !== totalQuestionNumber - 1
                         ? "İleri"

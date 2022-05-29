@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Navbar from "./Navbar";
 import Slides from "./Slides";
 import variables from "../assets/variables/variables";
+import $ from "jquery";
 
 const Home = () => {
   const [lessons] = useState(variables.lessons);
