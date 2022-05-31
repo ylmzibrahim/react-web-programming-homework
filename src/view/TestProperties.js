@@ -5,6 +5,7 @@ const TestProperties = ({
   userAnswers,
   changeCurrentTest,
   timeCounter,
+  score
 }) => {
   const [selectedQuestions, setSelectedQuestions] = useState(0);
 
@@ -65,20 +66,20 @@ const TestProperties = ({
           <div className="w-1/3 text-center border-r">
             <p className="text-xl">
               {(parseInt(timeCounter / (60 * 60)) < 10 ? "0" : "") +
-                parseInt(timeCounter / (60 * 60))}
+                (parseInt(timeCounter / (60 * 60)) % 60)}
             </p>
             <p className="text-sm">hrs</p>
           </div>
           <div className="w-1/3 text-center border-r">
             <p className="text-xl">
               {(parseInt(timeCounter / 60) < 10 ? "0" : "") +
-                parseInt(timeCounter / 60)}
+                (parseInt(timeCounter / 60) % 60)}
             </p>
             <p className="text-sm">mins</p>
           </div>
           <div className="w-1/3 text-center">
             <p className="text-xl">
-              {(timeCounter < 10 ? "0" : "") + timeCounter}
+              {(timeCounter < 10 ? "0" : "") + timeCounter%60}
             </p>
             <p className="text-sm">secs</p>
           </div>
@@ -87,7 +88,14 @@ const TestProperties = ({
 
       <hr className="w-10/12 mx-auto border-slate-400 my-3" />
 
-      {/* Score */}
+      <div className="flex flex-col space-y-2">
+        <div className="border rounded-md border-slate-400">
+          <p className="text-center text-slate-500 text-lg">
+          Score
+          </p>
+        </div>
+        <p>Total: {score}</p>
+      </div>
       {/* In this homework, user be able to change the answer any time. So decides to don't show score at the quiz */}
     </div>
   );

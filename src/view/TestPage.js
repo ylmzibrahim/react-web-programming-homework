@@ -4,6 +4,7 @@ import variables from "../assets/variables/variables";
 import Navbar from "./Navbar";
 import TestProperties from "./TestProperties";
 import { ChevronRightIcon } from "@heroicons/react/solid";
+import { Link } from "react-router-dom";
 
 const TestPage = () => {
   function useQuery() {
@@ -28,6 +29,9 @@ const TestPage = () => {
   ]);
   const [totalQuestionNumber, setTotalQuestionNumber] = useState(10);
   const [timeCounter, setTimeCounter] = useState(1);
+  const [timeCounterForQuestion, setTimeCounterForQuestion] = useState(1);
+  const [score, setScore] = useState(0);
+  const [isTestDone, setIsTestDone] = useState(false);
 
   // Variables about choice type questions
   const [randomChoiceArray, setRandomChoiceArray] = useState([]);
@@ -90,12 +94,13 @@ const TestPage = () => {
   // If time's up
   useEffect(() => {
     const timer1 = setTimeout(() => {
-      if (currentTest <= 10) {
+      if (currentTest <= 10 && !isTestDone) {
         setTimeCounter(timeCounter + 1);
+        setTimeCounterForQuestion(timeCounterForQuestion + 1);
       }
     }, 1000);
     return () => clearTimeout(timer1);
-  }, [timeCounter]);
+  }, [timeCounterForQuestion]);
 
   // Shuffle array
   const shuffle = (array) => {
@@ -128,17 +133,31 @@ const TestPage = () => {
     setSelectedChoice(i);
   };
 
-  const ToAnswerQuestion = (answer, index) => {
+  const ToAnswerQuestion = (answer) => {
     if (answer !== undefined) {
       let tempUserAnswers = [...userAnswers];
-      tempUserAnswers[index] = answer;
+      tempUserAnswers[currentTest] = answer;
       setUserAnswers(tempUserAnswers);
+      CalculateCurrentScore(answer);
 
+      setTimeCounterForQuestion(1);
       setSelectedChoice(null);
       setCalculationAnswer(null);
       setSelectedFill(null);
     }
-    setCurrentTest(currentTest + 1);
+    if (currentTest !== 9) setCurrentTest(currentTest + 1);
+    else setIsTestDone(true);
+  };
+
+  const CalculateCurrentScore = (answer) => {
+    if (tests[currentTest].answer1 === answer) {
+      console.log(timeCounterForQuestion);
+      console.log(timeCounterForQuestion <= 10);
+      if (timeCounterForQuestion <= 10) setScore(score + 10);
+      else if (timeCounterForQuestion <= 30) setScore(score + 9);
+      else if (timeCounterForQuestion <= 60) setScore(score + 8);
+      else setScore(score + 5);
+    }
   };
 
   const changeSelectedFill = (word, i) => {
@@ -154,118 +173,129 @@ const TestPage = () => {
         {errorMessage === null && !dataReady && <p>Yükleniyor...</p>}
         {errorMessage === null && dataReady && (
           <div className="max-w-screen-lg w-full flex flex-row space-x-5 xs:space-x-0 xs:space-y-2 xs:flex-col">
-            <div className="max-w-screen-lg w-full flex flex-col">
-              <div className="font-bold xs:font-semibold bg-gradient-to-tr from-pink-500/90 to-sky-500/90 px-5 xs:px-3 py-3 xs:py-2 left-0 absolute text-white w-fit ml-auto rounded-r-xl">
-                <h1 className="xs:text-base">
-                  {query.get("ders").toUpperCase().replace("-", " ")}
-                </h1>
-              </div>
+            {!isTestDone && (
+              <div className="max-w-screen-lg w-full flex flex-col">
+                <div className="font-bold xs:font-semibold bg-gradient-to-tr from-pink-500/90 to-sky-500/90 px-5 xs:px-3 py-3 xs:py-2 left-0 absolute text-white w-fit ml-auto rounded-r-xl">
+                  <h1 className="xs:text-base">
+                    {query.get("ders").toUpperCase().replace("-", " ")}
+                  </h1>
+                </div>
 
-              <div className="mt-16 max-w-screen-lg w-full p-5 bg-slate-100 rounded-xl shadow-xl">
-                <div className="max-w-screen-lg w-full">
-                  <div className="h-12 text-idlac-blue rounded-lg bg-idlac-blue-soft/10 flex items-center justify-center">
-                    {currentTest + 1 + ". " + tests[currentTest].title}
-                  </div>
-                  <div className="flex flex-col items-center justify-center">
-                    {/* Choice Type Question UI */}
-                    {tests[currentTest].type === "choice" && (
-                      <>
-                        <p className="m-5">{tests[currentTest].question}</p>
-                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
-                          {randomChoiceArray.map((sentence, i) => (
-                            <div
-                              key={i}
-                              className="font-semibold flex items-center flex-row p-1 cursor-pointer"
-                              onClick={() => changeSelectedChoice(i)}
-                            >
-                              <div
-                                className={
-                                  "border rounded-full w-4 h-4 border-slate-500 mr-2 " +
-                                  (selectedChoice === i ||
-                                  (userAnswers[currentTest] !== null &&
-                                    userAnswers[currentTest] === sentence)
-                                    ? "bg-slate-400/95"
-                                    : "bg-white")
-                                }
-                              />
-                              <p>{sentence}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Calculation Type Question UI */}
-                    {tests[currentTest].type === "calculation" && (
-                      <>
-                        <p className="m-5">{tests[currentTest].question}</p>
-                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
-                          <div className="font-semibold flex items-center flex-row p-1 cursor-pointer">
-                            <input
-                              type="text"
-                              className="w-40 rounded-md border-2 border-slate-300 p-1"
-                              placeholder="Answer here..."
-                              value={calculationAnswer || ""}
-                              onChange={(e) =>
-                                setCalculationAnswer(e.target.value)
-                              }
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Fill Type Question UI */}
-                    {tests[currentTest].type === "fill" && (
-                      <>
-                        <p className="m-5">{fillSentence}</p>
-                        <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
-                          <div className="font-semibold flex items-center flex-wrap justify-center p-1 cursor-pointer">
-                            {randomFillArray.map((word, i) => (
+                <div className="mt-16 max-w-screen-lg w-full p-5 bg-slate-100 rounded-xl shadow-xl">
+                  <div className="max-w-screen-lg w-full">
+                    <div className="h-12 text-idlac-blue rounded-lg bg-idlac-blue-soft/10 flex items-center justify-center">
+                      {currentTest + 1 + ". " + tests[currentTest].title}
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                      {/* Choice Type Question UI */}
+                      {tests[currentTest].type === "choice" && (
+                        <>
+                          <p className="m-5">{tests[currentTest].question}</p>
+                          <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                            {randomChoiceArray.map((sentence, i) => (
                               <div
                                 key={i}
-                                className={
-                                  "bg-sky-500/25 rounded-lg px-5 py-1 hover:bg-sky-500 hover:text-white m-1 cursor-pointer " +
-                                  (selectedFill === i ? "hidden" : "")
-                                }
-                                onClick={() => changeSelectedFill(word, i)}
+                                className="font-semibold flex items-center flex-row p-1 cursor-pointer"
+                                onClick={() => changeSelectedChoice(i)}
                               >
-                                {word}
+                                <div
+                                  className={
+                                    "border rounded-full w-4 h-4 border-slate-500 mr-2 " +
+                                    (selectedChoice === i ||
+                                    (userAnswers[currentTest] !== null &&
+                                      userAnswers[currentTest] === sentence)
+                                      ? "bg-slate-400/95"
+                                      : "bg-white")
+                                  }
+                                />
+                                <p>{sentence}</p>
                               </div>
                             ))}
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
 
-                    <button
-                      className="mt-5 flex flex-row bg-gradient-to-tr from-green-500 to-teal-500 text-white font-semibold pl-5 pr-3 py-2 rounded-xl hover:from-green-600 hover:to-teal-600 transition-all"
-                      onClick={() => {
-                        tests[currentTest].type === "choice"
-                          ? ToAnswerQuestion(
-                              randomChoiceArray[selectedChoice],
-                              currentTest
-                            )
-                          : tests[currentTest].type === "calculation"
-                          ? ToAnswerQuestion(calculationAnswer, currentTest)
-                          : ToAnswerQuestion(randomFillArray[selectedFill], currentTest);
-                      }}
-                    >
-                      {currentTest !== totalQuestionNumber - 1
-                        ? "İleri"
-                        : "Testi Bitir"}
-                      <ChevronRightIcon className="ml-2 w-6" />
-                    </button>
+                      {/* Calculation Type Question UI */}
+                      {tests[currentTest].type === "calculation" && (
+                        <>
+                          <p className="m-5">{tests[currentTest].question}</p>
+                          <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                            <div className="font-semibold flex items-center flex-row p-1 cursor-pointer">
+                              <input
+                                type="text"
+                                className="w-40 rounded-md border-2 border-slate-300 p-1"
+                                placeholder="Answer here..."
+                                value={calculationAnswer || ""}
+                                onChange={(e) =>
+                                  setCalculationAnswer(e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Fill Type Question UI */}
+                      {tests[currentTest].type === "fill" && (
+                        <>
+                          <p className="m-5">{fillSentence}</p>
+                          <div className="bg-idlac-blue-soft/10 mx-5 p-3 rounded-lg space-y-1">
+                            <div className="font-semibold flex items-center flex-wrap justify-center p-1 cursor-pointer">
+                              {randomFillArray.map((word, i) => (
+                                <div
+                                  key={i}
+                                  className={
+                                    "bg-sky-500/25 rounded-lg px-5 py-1 hover:bg-sky-500 hover:text-white m-1 cursor-pointer " +
+                                    (selectedFill === i ? "hidden" : "")
+                                  }
+                                  onClick={() => changeSelectedFill(word, i)}
+                                >
+                                  {word}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <button
+                        className="mt-5 flex flex-row bg-gradient-to-tr from-green-500 to-teal-500 text-white font-semibold pl-5 pr-3 py-2 rounded-xl hover:from-green-600 hover:to-teal-600 transition-all"
+                        onClick={() => {
+                          tests[currentTest].type === "choice"
+                            ? ToAnswerQuestion(
+                                randomChoiceArray[selectedChoice]
+                              )
+                            : tests[currentTest].type === "calculation"
+                            ? ToAnswerQuestion(calculationAnswer)
+                            : ToAnswerQuestion(randomFillArray[selectedFill]);
+                        }}
+                      >
+                        {currentTest !== totalQuestionNumber - 1
+                          ? "İleri"
+                          : "Testi Bitir"}
+                        <ChevronRightIcon className="ml-2 w-6" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center mx-4"></div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-center mx-4"></div>
                 </div>
               </div>
-            </div>
+            )}
+            {isTestDone && (
+              <div className="h-40 bg-slate-100 border-2 border-slate-400 rounded-lg p-5 m-auto flex flex-col space-y-2">
+                <p>Your score is {score}.</p>
+                <p>Your spend {timeCounter} seconds.</p>
+                <Link to={"/"} className="bg-green-500 text-white p-2 text-center rounded-lg">
+                  Go Home Page
+                </Link>
+              </div>
+            )}
             <TestProperties
               currentTest={currentTest + 1}
               userAnswers={userAnswers}
               changeCurrentTest={setCurrentTest}
               timeCounter={timeCounter}
+              score={score}
             />
           </div>
         )}
